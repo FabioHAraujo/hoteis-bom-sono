@@ -115,6 +115,36 @@ export function FiltroDeMostragem() {
       totalPrice: 1027,
       isPreferred: true,
     },
+    {
+      id: "3",
+      images: [quarto1, quarto2, quarto3],
+      location: "Cambará do Sul, Brasil",
+      title: "Vistas para montanha e lago",
+      rating: 4.93,
+      pricePerNight: 1027,
+      totalPrice: 1027,
+      isPreferred: false,
+    },
+    {
+      id: "4",
+      images: [quarto1, quarto2, quarto3],
+      location: "Cambará do Sul, Brasil",
+      title: "Vistas para montanha e lago",
+      rating: 4.93,
+      pricePerNight: 1027,
+      totalPrice: 1027,
+      isPreferred: true,
+    },
+    {
+      id: "5",
+      images: [quarto1, quarto2, quarto3],
+      location: "Cambará do Sul, Brasil",
+      title: "Vistas para montanha e lago",
+      rating: 4.93,
+      pricePerNight: 1027,
+      totalPrice: 1027,
+      isPreferred: false,
+    },
   ]
 
   const [activeFilter, setActiveFilter] = React.useState<string | null>(null)
@@ -138,18 +168,18 @@ export function FiltroDeMostragem() {
   return (
     <div className="space-y-6 p-4">
       <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex w-max space-x-4 p-1">
+        <div className="flex justify-between w-full space-x-4 p-1">
           {filters.map((filter) => (
             <TooltipProvider key={filter.id}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant={activeFilter === filter.id ? "default" : "outline"}
-                    className="flex flex-col items-center gap-2 p-4"
+                    className="flex flex-col items-center gap-2 p-4 h-full w-full"
                     onClick={() => setActiveFilter(filter.id)}
                   >
-                    <span className="text-2xl">{filter.icon}</span>
-                    <span className="text-xs">{filter.name}</span>
+                    <span className="text-3xl">{filter.icon}</span>
+                    <span className="text-2x1">{filter.name}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>

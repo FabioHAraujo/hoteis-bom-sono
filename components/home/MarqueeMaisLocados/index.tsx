@@ -101,11 +101,11 @@ const QuartoCard: React.FC<QuartoCardProps> = ({
         "relative w-80 cursor-pointer overflow-hidden rounded-xl border p-4",
         "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
         "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
-        "flex flex-col justify-between h-72"
+        "flex flex-col justify-between h-80"
       )}
     >
       <Image
-        className="rounded-lg object-cover w-full h-36"
+        className="rounded-lg overflow-hidden w-[300px] h-[500px]"
         src={img}
         alt={`Imagem do quarto localizado em ${cidade}, ${pais}`}
         placeholder="blur"
