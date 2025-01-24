@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import Image from "next/image"
+import Image, { StaticImageData } from "next/image"
 import quarto1 from "@/public/assets/data/quarto1.jpg"
 import quarto2 from "@/public/assets/data/quarto2.jpg"
 import quarto3 from "@/public/assets/data/quarto3.jpg"
@@ -14,7 +14,7 @@ import quarto3 from "@/public/assets/data/quarto3.jpg"
 // Tipos
 interface Property {
   id: string
-  images: string[]
+  images: StaticImageData[]
   location: string
   title: string
   rating: number
@@ -31,21 +31,21 @@ interface FilterCategory {
 }
 
 // Componente do Carrossel de Imagens
-function ImageCarousel({ images }: { images: string[] }) {
+function ImageCarousel({ images }: { images: StaticImageData[] }) {
   const [currentImage, setCurrentImage] = React.useState(0)
 
-  const nextImage = () => {
+  const nextImage = React.useCallback(() => {
     setCurrentImage((prev) => (prev + 1) % images.length)
-  }
+  }, [images.length])
 
-  const previousImage = () => {
+  const previousImage = React.useCallback(() => {
     setCurrentImage((prev) => (prev - 1 + images.length) % images.length)
-  }
+  }, [images.length])
 
   return (
     <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg">
       <Image
-        src={images[currentImage] || quarto1}
+        src={images[currentImage]?.src || quarto1.src}
         alt="Imagem da propriedade"
         fill
         className="object-cover"
@@ -54,7 +54,9 @@ function ImageCarousel({ images }: { images: string[] }) {
         {images.map((_, index) => (
           <div
             key={index}
-            className={`h-1.5 w-1.5 rounded-full ${index === currentImage ? "bg-white" : "bg-white/50"}`}
+            className={`h-1.5 w-1.5 rounded-full ${
+              index === currentImage ? "bg-white" : "bg-white/50"
+            }`}
           />
         ))}
       </div>
@@ -76,7 +78,6 @@ function ImageCarousel({ images }: { images: string[] }) {
 
 // Componente Principal
 export function FiltroDeMostragem() {
-  // Dados de exemplo para os filtros
   const filters: FilterCategory[] = [
     { id: "beach", name: "Em frente à praia", icon: "🏖️" },
     { id: "iconic", name: "Icônicos", icon: "🏛️" },
@@ -93,15 +94,10 @@ export function FiltroDeMostragem() {
     { id: "beach-front", name: "Pousadas", icon: "🏨" },
   ]
 
-  // Dados de exemplo para as propriedades
   const properties: Property[] = [
     {
       id: "1",
-      images: [
-        quarto1,
-        quarto2,
-        quarto3,
-      ],
+      images: [quarto1, quarto2, quarto3],
       location: "Urubici, Brasil",
       title: "Vista para montanha e rio",
       rating: 4.93,
@@ -111,11 +107,7 @@ export function FiltroDeMostragem() {
     },
     {
       id: "2",
-      images: [
-        quarto1,
-        quarto2,
-        quarto3,
-      ],
+      images: [quarto1, quarto2, quarto3],
       location: "Cambará do Sul, Brasil",
       title: "Vistas para montanha e lago",
       rating: 4.93,
@@ -123,27 +115,28 @@ export function FiltroDeMostragem() {
       totalPrice: 1027,
       isPreferred: true,
     },
-    // Adicione mais propriedades conforme necessário
   ]
 
   const [activeFilter, setActiveFilter] = React.useState<string | null>(null)
   const [favorites, setFavorites] = React.useState<Set<string>>(new Set())
 
-  const toggleFavorite = (propertyId: string) => {
-    setFavorites((prev) => {
-      const newFavorites = new Set(prev)
-      if (newFavorites.has(propertyId)) {
-        newFavorites.delete(propertyId)
-      } else {
-        newFavorites.add(propertyId)
-      }
-      return newFavorites
-    })
-  }
+  const toggleFavorite = React.useCallback(
+    (propertyId: string) => {
+      setFavorites((prev) => {
+        const newFavorites = new Set(prev)
+        if (newFavorites.has(propertyId)) {
+          newFavorites.delete(propertyId)
+        } else {
+          newFavorites.add(propertyId)
+        }
+        return newFavorites
+      })
+    },
+    []
+  )
 
   return (
     <div className="space-y-6 p-4">
-      {/* Barra de Filtros */}
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex w-max space-x-4 p-1">
           {filters.map((filter) => (
@@ -169,7 +162,6 @@ export function FiltroDeMostragem() {
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
-      {/* Grade de Propriedades */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {properties.map((property) => (
           <Card key={property.id} className="overflow-hidden">
@@ -186,7 +178,9 @@ export function FiltroDeMostragem() {
                   className="absolute right-2 top-2 rounded-full bg-white/80 p-2"
                 >
                   <Heart
-                    className={`h-5 w-5 ${favorites.has(property.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`}
+                    className={`h-5 w-5 ${
+                      favorites.has(property.id) ? "fill-red-500 text-red-500" : "text-gray-600"
+                    }`}
                   />
                 </button>
               </div>
@@ -213,4 +207,3 @@ export function FiltroDeMostragem() {
     </div>
   )
 }
-
