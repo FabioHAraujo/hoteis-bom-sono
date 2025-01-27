@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { AuthForm } from "@/components/auth/auth-form"
-import Image from "next/image"
-import { useState, useEffect } from "react"
+import { AuthForm } from "@/components/auth/auth-form";
+import Image from "next/image";
+import { useState, useEffect } from "react";
 import logo from "@/public/assets/global/bed-svgrepo-com.svg";
 
 const videos = [
@@ -11,18 +11,18 @@ const videos = [
   "https://videos.pexels.com/video-files/3576352/3576352-uhd_2560_1440_25fps.mp4",
   "https://videos.pexels.com/video-files/8419217/8419217-uhd_2560_1440_25fps.mp4",
   "https://videos.pexels.com/video-files/6242776/6242776-hd_1080_1920_30fps.mp4",
-]
+];
 
 export default function AuthPage() {
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % videos.length)
-    }, 10000) // Muda o vídeo a cada 10 segundos
+      setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % videos.length);
+    }, 10000); // Muda o vídeo a cada 10 segundos
 
-    return () => clearInterval(intervalId)
-  }, [])
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <div className="flex min-h-screen">
@@ -41,7 +41,8 @@ export default function AuthPage() {
             <source src={video} type="video/mp4" />
           </video>
         ))}
-        <div className="absolute inset-0 bg-black/30" /> {/* Overlay for better text visibility */}
+        <div className="absolute inset-0 bg-black/30" />{" "}
+        {/* Overlay for better text visibility */}
         <div className="relative p-8">
           <Image
             src={logo}
@@ -61,6 +62,5 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
