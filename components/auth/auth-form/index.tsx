@@ -1,21 +1,25 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import PocketBase from "pocketbase";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+
+// Configuração do PocketBase
+const pb = new PocketBase("http://127.0.0.1:8090");
 
 // Schemas de validação
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-})
+});
 
 const registerSchema = z
   .object({
@@ -27,14 +31,14 @@ const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem",
     path: ["confirmPassword"],
-  })
+  });
 
-type LoginValues = z.infer<typeof loginSchema>
-type RegisterValues = z.infer<typeof registerSchema>
+type LoginValues = z.infer<typeof loginSchema>;
+type RegisterValues = z.infer<typeof registerSchema>;
 
 export function AuthForm() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = React.useState<boolean>(false)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   // Form para Login
   const loginForm = useForm<LoginValues>({
@@ -43,7 +47,7 @@ export function AuthForm() {
       email: "",
       password: "",
     },
-  })
+  });
 
   // Form para Registro
   const registerForm = useForm<RegisterValues>({
@@ -54,35 +58,58 @@ export function AuthForm() {
       password: "",
       confirmPassword: "",
     },
-  })
+  });
 
   async function onLogin(data: LoginValues) {
-    setIsLoading(true)
-
+    setIsLoading(true);
     try {
-      // Aqui você implementaria a lógica de login
-      console.log("Login data:", data)
-      toast.success("Login realizado com sucesso!")
-      router.push("/dashboard")
-    } catch (error) {
-      toast.error("Erro ao fazer login. Tente novamente.")
+      const authData = await pb.collection("users").authWithPassword(data.email, data.password);
+      console.log("Login data:", authData);
+
+      // Verificar role e redirecionar
+      const role = authData.record.role;
+      if (role === "site-admin") {
+        router.push("/dashboard");
+      } else {
+        router.push("/home");
+      }
+
+      alert(`Login realizado com sucesso! Role: ${role}`);
+      toast.success("Login realizado com sucesso!");
+    } catch (error: any) {
+      console.error("Erro ao fazer login:", error);
+      alert(`Erro ao fazer login: ${error.message}`);
+      toast.error("Erro ao fazer login. Tente novamente.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
   async function onRegister(data: RegisterValues) {
-    setIsLoading(true)
-
+    setIsLoading(true);
     try {
-      // Aqui você implementaria a lógica de registro
-      console.log("Register data:", data)
-      toast.success("Registro realizado com sucesso!")
-      router.push("/dashboard")
-    } catch (error) {
-      toast.error("Erro ao fazer registro. Tente novamente.")
+      const user = await pb.collection("users").create({
+        username: data.name,
+        email: data.email,
+        password: data.password,
+        passwordConfirm: data.confirmPassword,
+        role: "user", // Definir role padrão,
+        name: data.name
+      });
+
+      console.log("Registro realizado:", user);
+      alert("Registro realizado com sucesso!");
+      toast.success("Registro realizado com sucesso!");
+
+      // Autenticar após registro
+      await pb.collection("users").authWithPassword(data.email, data.password);
+      router.push("/home");
+    } catch (error: any) {
+      console.error("Erro ao fazer registro:", error);
+      alert(`Erro ao fazer registro: ${error.message}`);
+      toast.error("Erro ao fazer registro. Tente novamente.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -205,6 +232,5 @@ export function AuthForm() {
         </div>
       </TabsContent>
     </Tabs>
-  )
+  );
 }
-

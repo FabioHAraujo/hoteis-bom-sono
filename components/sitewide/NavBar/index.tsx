@@ -1,9 +1,11 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import PocketBase from "pocketbase";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -11,15 +13,35 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu"
-import { Search, HelpCircle } from "lucide-react"
-import Image from "next/image"
-import brasil from "@/public/assets/global/brasil.svg"
-import uk from "@/public/assets/global/uk.svg"
-import spain from "@/public/assets/global/spain.svg"
-import logo from "@/public/assets/global/logo.png"
+} from "@/components/ui/navigation-menu";
+import { Search, HelpCircle, User } from "lucide-react";
+import Image from "next/image";
+import brasil from "@/public/assets/global/brasil.svg";
+import uk from "@/public/assets/global/uk.svg";
+import spain from "@/public/assets/global/spain.svg";
+import logo from "@/public/assets/global/logo.png";
+
+// Configuração do PocketBase
+const pb = new PocketBase("http://127.0.0.1:8090");
 
 export function Navbar() {
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Verificar se o usuário está autenticado no PocketBase
+    const checkAuth = async () => {
+      try {
+        const authUser = pb.authStore.model;
+        setUser(authUser);
+      } catch (error) {
+        console.error("Erro ao verificar autenticação:", error);
+        setUser(null);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
   return (
     <nav className="border-b">
       <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
@@ -130,7 +152,7 @@ export function Navbar() {
                             className="flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground"
                             href="#"
                             onClick={(e) => {
-                              e.preventDefault()
+                              e.preventDefault();
                               // Lógica para mudar o idioma
                             }}
                           >
@@ -145,9 +167,22 @@ export function Navbar() {
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
+
+          {/* Verificar autenticação e exibir botão correto */}
+          {user ? (
+            <Link href="/perfil">
+              <Button variant="outline">
+                <User className="mr-2 h-4 w-4" />
+                Perfil
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/auth">
+              <Button>Entre</Button>
+            </Link>
+          )}
         </div>
       </div>
     </nav>
-  )
+  );
 }
-

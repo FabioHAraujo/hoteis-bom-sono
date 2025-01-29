@@ -1,51 +1,51 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Heart, ChevronLeft, ChevronRight } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import Image, { StaticImageData } from "next/image"
-import quarto1 from "@/public/assets/data/quarto1.jpg"
-import quarto2 from "@/public/assets/data/quarto2.jpg"
-import quarto3 from "@/public/assets/data/quarto3.jpg"
+import * as React from "react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import Image from "next/image";
+import placeholder from "@/public/assets/global/placeholder.png";
 
 // Tipos
-interface Property {
-  id: string
-  images: StaticImageData[]
-  location: string
-  title: string
-  rating: number
-  pricePerNight: number
-  totalPrice: number
-  isFavorite?: boolean
-  isPreferred?: boolean
+interface Room {
+  id: string;
+  name: string;
+  description: string;
+  bed_count: number;
+  value: number;
+  value_with_taxes: number;
+  cleaning_fee: number;
+  hotel: string;
+  country: string;
+  city: string;
+  state: string;
 }
 
 interface FilterCategory {
-  id: string
-  name: string
-  icon: string
+  id: string;
+  name: string;
+  icon: string;
 }
 
 // Componente do Carrossel de Imagens
-function ImageCarousel({ images }: { images: StaticImageData[] }) {
-  const [currentImage, setCurrentImage] = React.useState(0)
+function ImageCarousel({ images }: { images: string[] }) {
+  const [currentImage, setCurrentImage] = React.useState(0);
 
-  const nextImage = React.useCallback(() => {
-    setCurrentImage((prev) => (prev + 1) % images.length)
-  }, [images.length])
+  const nextImage = () => {
+    setCurrentImage((prev) => (prev + 1) % images.length);
+  };
 
-  const previousImage = React.useCallback(() => {
-    setCurrentImage((prev) => (prev - 1 + images.length) % images.length)
-  }, [images.length])
+  const previousImage = () => {
+    setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
+  };
 
   return (
     <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg">
       <Image
-        src={images[currentImage]?.src || quarto1.src}
+        src={images[currentImage] || placeholder}
         alt="Imagem da propriedade"
         fill
         className="object-cover"
@@ -54,9 +54,7 @@ function ImageCarousel({ images }: { images: StaticImageData[] }) {
         {images.map((_, index) => (
           <div
             key={index}
-            className={`h-1.5 w-1.5 rounded-full ${
-              index === currentImage ? "bg-white" : "bg-white/50"
-            }`}
+            className={`h-1.5 w-1.5 rounded-full ${index === currentImage ? "bg-white" : "bg-white/50"}`}
           />
         ))}
       </div>
@@ -73,7 +71,7 @@ function ImageCarousel({ images }: { images: StaticImageData[] }) {
         <ChevronRight className="h-4 w-4" />
       </button>
     </div>
-  )
+  );
 }
 
 // Componente Principal
@@ -92,78 +90,68 @@ export function FiltroDeMostragem() {
     { id: "tiny", name: "Microcasas", icon: "🏠" },
     { id: "islands", name: "Ilhas", icon: "🏝️" },
     { id: "beach-front", name: "Pousadas", icon: "🏨" },
-  ]
+  ];
 
-  const properties: Property[] = [
-    {
-      id: "1",
-      images: [quarto1, quarto2, quarto3],
-      location: "Urubici, Brasil",
-      title: "Vista para montanha e rio",
-      rating: 4.93,
-      pricePerNight: 542,
-      totalPrice: 742,
-      isPreferred: true,
-    },
-    {
-      id: "2",
-      images: [quarto1, quarto2, quarto3],
-      location: "Cambará do Sul, Brasil",
-      title: "Vistas para montanha e lago",
-      rating: 4.93,
-      pricePerNight: 1027,
-      totalPrice: 1027,
-      isPreferred: true,
-    },
-    {
-      id: "3",
-      images: [quarto1, quarto2, quarto3],
-      location: "Cambará do Sul, Brasil",
-      title: "Vistas para montanha e lago",
-      rating: 4.93,
-      pricePerNight: 1027,
-      totalPrice: 1027,
-      isPreferred: false,
-    },
-    {
-      id: "4",
-      images: [quarto1, quarto2, quarto3],
-      location: "Cambará do Sul, Brasil",
-      title: "Vistas para montanha e lago",
-      rating: 4.93,
-      pricePerNight: 1027,
-      totalPrice: 1027,
-      isPreferred: true,
-    },
-    {
-      id: "5",
-      images: [quarto1, quarto2, quarto3],
-      location: "Cambará do Sul, Brasil",
-      title: "Vistas para montanha e lago",
-      rating: 4.93,
-      pricePerNight: 1027,
-      totalPrice: 1027,
-      isPreferred: false,
-    },
-  ]
+  const [rooms, setRooms] = React.useState<Room[]>([]);
+  const [roomImages, setRoomImages] = React.useState<{ [key: string]: string[] }>({});
+  const [activeFilter, setActiveFilter] = React.useState<string | null>(null);
+  const [favorites, setFavorites] = React.useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const [activeFilter, setActiveFilter] = React.useState<string | null>(null)
-  const [favorites, setFavorites] = React.useState<Set<string>>(new Set())
+  React.useEffect(() => {
+    const fetchRoomsAndImages = async () => {
+      try {
+        // Buscar os quartos via API Express
+        const roomsResponse = await fetch("http://127.0.0.1:3030/rooms");
+        const roomsData = await roomsResponse.json();
 
-  const toggleFavorite = React.useCallback(
-    (propertyId: string) => {
-      setFavorites((prev) => {
-        const newFavorites = new Set(prev)
-        if (newFavorites.has(propertyId)) {
-          newFavorites.delete(propertyId)
-        } else {
-          newFavorites.add(propertyId)
-        }
-        return newFavorites
-      })
-    },
-    []
-  )
+        const imagesByRoom: { [key: string]: string[] } = {};
+
+        // Buscar imagens para cada quarto
+        await Promise.all(
+          roomsData.map(async (room: any) => {
+            try {
+              const imagesResponse = await fetch(`http://127.0.0.1:3030/rooms/${room.id}/images`);
+              const imagesData = await imagesResponse.json();
+            
+              const bannerResponse = await fetch(`http://127.0.0.1:3030/rooms/${room.id}/banner`);
+              const bannerData = await bannerResponse.json();
+            
+              imagesByRoom[room.id] = [bannerData.banner, ...(imagesData.images || [])];
+            } catch (error) {
+              console.error(`Erro ao buscar imagens do quarto ${room.id}:`, error);
+              imagesByRoom[room.id] = [placeholder.src]; // 🔥 Convertendo StaticImageData para string
+            }
+          })
+        );
+
+        setRooms(roomsData);
+        setRoomImages(imagesByRoom);
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRoomsAndImages();
+  }, []);
+
+  const toggleFavorite = (roomId: string) => {
+    setFavorites((prev) => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(roomId)) {
+        newFavorites.delete(roomId);
+      } else {
+        newFavorites.add(roomId);
+      }
+      return newFavorites;
+    });
+  };
+
+  if (isLoading) {
+    return <div className="text-center mt-10">Carregando quartos...</div>;
+  }
 
   return (
     <div className="space-y-6 p-4">
@@ -193,47 +181,35 @@ export function FiltroDeMostragem() {
       </ScrollArea>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {properties.map((property) => (
-          <Card key={property.id} className="overflow-hidden">
-            <CardContent className="p-0">
-              <div className="relative">
-                <ImageCarousel images={property.images} />
-                {property.isPreferred && (
-                  <div className="absolute left-2 top-2 rounded-full bg-white px-3 py-1 text-xs font-medium">
-                    Preferido dos hóspedes
-                  </div>
-                )}
-                <button
-                  onClick={() => toggleFavorite(property.id)}
-                  className="absolute right-2 top-2 rounded-full bg-white/80 p-2"
-                >
-                  <Heart
-                    className={`h-5 w-5 ${
-                      favorites.has(property.id) ? "fill-red-500 text-red-500" : "text-gray-600"
-                    }`}
-                  />
-                </button>
-              </div>
-              <div className="space-y-2 p-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium">{property.location}</h3>
-                  <div className="flex items-center gap-1">
-                    <span>★</span>
-                    <span>{property.rating}</span>
-                  </div>
+        {rooms.map((room) => {
+          const images = roomImages[room.id] || [placeholder]; // Usa o placeholder se não houver imagens
+
+          return (
+            <Card key={room.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="relative">
+                  <ImageCarousel images={images} />
+                  <button
+                    onClick={() => toggleFavorite(room.id)}
+                    className="absolute right-2 top-2 rounded-full bg-white/80 p-2"
+                  >
+                    <Heart
+                      className={`h-5 w-5 ${favorites.has(room.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`}
+                    />
+                  </button>
                 </div>
-                <p className="text-sm text-gray-500">{property.title}</p>
-                <div className="space-y-1">
+                <div className="space-y-2 p-4">
+                  <p className="text-sm text-gray-500">{room.name}</p>
+                  <p className="text-xs text-gray-500">{room.description}</p>
                   <p className="text-sm">
-                    <span className="font-medium">R${property.pricePerNight}</span> noite
+                    <span className="font-medium">R${room.value.toFixed(2)}</span> noite
                   </p>
-                  <p className="text-sm text-gray-500">Total de R${property.totalPrice}</p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
-  )
+  );
 }
